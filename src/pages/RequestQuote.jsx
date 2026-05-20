@@ -59,7 +59,7 @@ export default function RequestQuote() {
       </div>
 
       <Tabs defaultValue="bulk_quote">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-2 w-full gap-1 h-auto p-1">
           <TabsTrigger value="bulk_quote">Bulk Quote</TabsTrigger>
           <TabsTrigger value="technical_inquiry">Technical Help</TabsTrigger>
           <TabsTrigger value="machine_sourcing">Machine Sourcing</TabsTrigger>

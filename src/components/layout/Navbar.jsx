@@ -34,8 +34,8 @@ export default function Navbar({ cartCount = 0 }) {
     <header className="sticky top-0 z-50 w-full">
       {/* Top bar */}
       <div className="bg-secondary text-secondary-foreground">
-        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-3">
             <a href="tel:09074648050" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Phone className="h-3 w-3" />
               <span>09074648050</span>
@@ -51,8 +51,8 @@ export default function Navbar({ cartCount = 0 }) {
 
       {/* Main nav */}
       <div className="bg-card border-b shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
               <h1 className="font-heading text-xl sm:text-2xl font-bold">
@@ -79,7 +79,7 @@ export default function Navbar({ cartCount = 0 }) {
             </form>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1 sm:gap-2 ml-auto">
               <Link to="/cart" className="relative">
                 <Button variant="ghost" size="icon" className="relative">
                   <ShoppingCart className="h-5 w-5" />

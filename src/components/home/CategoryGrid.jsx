@@ -22,7 +22,7 @@ export default function CategoryGrid() {
           <h2 className="font-heading text-2xl md:text-3xl font-bold">Browse by Category</h2>
           <p className="text-muted-foreground mt-2">Find exactly what your business needs</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {CATEGORIES.map((cat, i) => (
             <motion.div
               key={cat.slug}
@@ -33,11 +33,11 @@ export default function CategoryGrid() {
             >
               <Link
                 to={`/products?category=${cat.slug}`}
-                className={`group block p-5 rounded-xl border ${cat.color} hover:shadow-md transition-all duration-300`}
+                className={`group block p-3 sm:p-5 rounded-xl border ${cat.color} hover:shadow-md transition-all duration-300`}
               >
-                <cat.icon className="h-8 w-8 mb-3" />
-                <h3 className="font-heading font-semibold text-sm">{cat.name}</h3>
-                <p className="text-xs mt-1 opacity-70">{cat.desc}</p>
+                <cat.icon className="h-6 w-6 sm:h-8 sm:w-8 mb-2 sm:mb-3" />
+                <h3 className="font-heading font-semibold text-xs sm:text-sm">{cat.name}</h3>
+                <p className="text-xs mt-0.5 opacity-70 hidden sm:block">{cat.desc}</p>
                 <div className="mt-3 flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                   Browse <ArrowRight className="h-3 w-3" />
                 </div>

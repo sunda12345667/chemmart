@@ -119,7 +119,7 @@ export default function Cart() {
       </h1>
 
       {step === 'cart' ? (
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map(item => (
@@ -163,7 +163,7 @@ export default function Cart() {
           </div>
 
           {/* Summary */}
-          <Card className="h-fit sticky top-36">
+          <Card className="h-fit lg:sticky lg:top-36">
             <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">

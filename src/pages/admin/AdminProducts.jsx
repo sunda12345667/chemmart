@@ -86,9 +86,9 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-bold">Products</h1>
-        <Button onClick={openCreate} className="gap-1.5"><Plus className="h-4 w-4" /> Add Product</Button>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="font-heading text-xl sm:text-2xl font-bold">Products</h1>
+        <Button onClick={openCreate} className="gap-1.5 text-sm"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add </span>Product</Button>
       </div>
 
       <div className="relative max-w-sm">
@@ -96,7 +96,8 @@ export default function AdminProducts() {
         <Input placeholder="Search products..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      <Card>
+      {/* Desktop table */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -148,6 +149,39 @@ export default function AdminProducts() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {filtered.map(p => (
+          <Card key={p.id}>
+            <CardContent className="p-3">
+              <div className="flex items-start gap-3">
+                {p.images?.[0] && (
+                  <img src={p.images[0]} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm line-clamp-1">{p.name}</p>
+                  <p className="text-xs text-muted-foreground capitalize mt-0.5">{p.category_id?.replace(/-/g, ' ')}</p>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <Badge className={`text-xs ${STOCK_STATUS_COLORS[p.stock_status]}`}>{STOCK_STATUS_LABELS[p.stock_status]}</Badge>
+                    {p.is_featured && <Badge className="bg-accent text-accent-foreground text-xs">Featured</Badge>}
+                  </div>
+                  <p className="text-xs font-medium mt-1">
+                    {p.price_mode === 'fixed' ? formatPrice(p.price) : p.price_mode === 'range' ? `${formatPrice(p.price_min)}–${formatPrice(p.price_max)}` : 'Quote'}
+                  </p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {filtered.length === 0 && (
+          <div className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : 'No products found'}</div>
+        )}
+      </div>
 
       {/* Product Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

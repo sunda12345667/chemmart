@@ -9,12 +9,12 @@ import { formatPrice, STOCK_STATUS_LABELS, STOCK_STATUS_COLORS } from '@/lib/con
 export default function ProductCard({ product, onAddToCart }) {
   const renderPrice = () => {
     if (product.price_mode === 'fixed' && product.price) {
-      return <span className="text-lg font-bold text-foreground">{formatPrice(product.price)}</span>;
+      return <span className="font-bold text-foreground">{formatPrice(product.price)}</span>;
     }
     if (product.price_mode === 'range' && product.price_min && product.price_max) {
-      return <span className="text-lg font-bold text-foreground">{formatPrice(product.price_min)} – {formatPrice(product.price_max)}</span>;
+      return <span className="font-bold text-foreground text-xs sm:text-sm">{formatPrice(product.price_min)} – {formatPrice(product.price_max)}</span>;
     }
-    return <span className="text-sm font-semibold text-primary">Request Quote</span>;
+    return <span className="text-xs sm:text-sm font-semibold text-primary">Request Quote</span>;
   };
 
   const stockStatus = product.stock_status || 'in_stock';
@@ -35,32 +35,32 @@ export default function ProductCard({ product, onAddToCart }) {
           {STOCK_STATUS_LABELS[stockStatus]}
         </Badge>
       </Link>
-      <CardContent className="p-4 flex flex-col flex-1">
+      <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
         <Link to={`/product/${product.slug || product.id}`} className="block">
-          <h3 className="font-heading font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-heading font-semibold text-xs sm:text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
             {product.name}
           </h3>
           {product.grade && (
-            <p className="text-xs text-muted-foreground mt-1">Grade: {product.grade}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">Grade: {product.grade}</p>
           )}
         </Link>
-        <div className="mt-auto pt-3">
-          <div className="mb-2">{renderPrice()}</div>
+        <div className="mt-auto pt-2">
+          <div className="mb-1.5 text-xs sm:text-base">{renderPrice()}</div>
           {product.minimum_order_qty > 1 && (
-            <p className="text-xs text-muted-foreground mb-2">MOQ: {product.minimum_order_qty} units</p>
+            <p className="text-xs text-muted-foreground mb-2">MOQ: {product.minimum_order_qty}</p>
           )}
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 text-xs"
+              className="flex-1 text-xs h-8 px-2"
               onClick={(e) => { e.preventDefault(); onAddToCart?.(product); }}
             >
-              <ShoppingCart className="h-3.5 w-3.5 mr-1" />
-              Add to Cart
+              <ShoppingCart className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="hidden xs:inline">Add to </span>Cart
             </Button>
             <Link to={`/product/${product.slug || product.id}`}>
-              <Button size="sm" variant="ghost" className="text-xs">
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                 <Eye className="h-3.5 w-3.5" />
               </Button>
             </Link>

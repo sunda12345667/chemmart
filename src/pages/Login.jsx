@@ -9,8 +9,8 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("sundayadenuga320@gmail.com");
+  const [password, setPassword] = useState("password");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 

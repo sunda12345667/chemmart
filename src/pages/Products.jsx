@@ -203,9 +203,9 @@ export default function Products() {
           )}
 
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="bg-muted animate-pulse rounded-xl h-72" />
+                <div key={i} className="bg-muted animate-pulse rounded-xl h-56 sm:h-72" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -214,7 +214,7 @@ export default function Products() {
               <Button variant="outline" className="mt-4" onClick={clearFilters}>Clear Filters</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
               {filtered.map(product => (
                 <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
               ))}
