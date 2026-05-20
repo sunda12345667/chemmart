@@ -1,0 +1,158 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly slug"
+    },
+    "category_id": {
+      "type": "string",
+      "description": "Category ID"
+    },
+    "subcategory_id": {
+      "type": "string",
+      "description": "Subcategory ID"
+    },
+    "short_description": {
+      "type": "string"
+    },
+    "technical_description": {
+      "type": "string"
+    },
+    "applications": {
+      "type": "string",
+      "description": "Use cases / applications"
+    },
+    "grade": {
+      "type": "string",
+      "description": "Grade or specification"
+    },
+    "purity": {
+      "type": "string",
+      "description": "Purity or material grade"
+    },
+    "country_of_origin": {
+      "type": "string"
+    },
+    "packaging_sizes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Available packaging sizes"
+    },
+    "minimum_order_qty": {
+      "type": "number",
+      "default": 1
+    },
+    "price_mode": {
+      "type": "string",
+      "enum": [
+        "fixed",
+        "range",
+        "quote"
+      ],
+      "default": "quote"
+    },
+    "price": {
+      "type": "number",
+      "description": "Fixed price in Naira"
+    },
+    "price_min": {
+      "type": "number",
+      "description": "Min price for range"
+    },
+    "price_max": {
+      "type": "number",
+      "description": "Max price for range"
+    },
+    "stock_status": {
+      "type": "string",
+      "enum": [
+        "in_stock",
+        "low_stock",
+        "out_of_stock",
+        "pre_order"
+      ],
+      "default": "in_stock"
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Product image URLs"
+    },
+    "sds_url": {
+      "type": "string",
+      "description": "Safety Data Sheet file URL"
+    },
+    "tds_url": {
+      "type": "string",
+      "description": "Technical Data Sheet file URL"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    },
+    "view_count": {
+      "type": "number",
+      "default": 0
+    },
+    "search_count": {
+      "type": "number",
+      "default": 0
+    },
+    "supplier_name": {
+      "type": "string"
+    },
+    "supplier_contact": {
+      "type": "string"
+    },
+    "cost_price": {
+      "type": "number",
+      "description": "Hidden from public - admin only"
+    },
+    "warehouse_location": {
+      "type": "string"
+    },
+    "machine_type": {
+      "type": "string",
+      "description": "For machinery category"
+    },
+    "production_capacity": {
+      "type": "string",
+      "description": "For machinery category"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "category_id"
+  ]
+}
