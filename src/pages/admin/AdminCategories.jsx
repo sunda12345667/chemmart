@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import SingleImageUploader from '@/components/admin/SingleImageUploader';
 
 export default function AdminCategories() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -93,7 +94,7 @@ export default function AdminCategories() {
             <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
             <div><Label>Slug *</Label><Input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} placeholder="auto-generated" /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} /></div>
-            <div><Label>Image URL</Label><Input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} /></div>
+            <SingleImageUploader label="Category Image" imageUrl={form.image_url || ''} onChange={v => setForm(p => ({ ...p, image_url: v }))} />
             <div className="flex items-center gap-2"><Switch checked={form.is_active !== false} onCheckedChange={v => setForm(p => ({ ...p, is_active: v }))} /><Label>Active</Label></div>
             <Button className="w-full" onClick={() => {
               const slug = form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');

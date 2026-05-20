@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Search, Archive } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import ProductImageUploader from '@/components/admin/ProductImageUploader';
 import { STOCK_STATUS_LABELS, STOCK_STATUS_COLORS, formatPrice } from '@/lib/constants';
 import { toast } from 'sonner';
 
@@ -216,7 +217,7 @@ export default function AdminProducts() {
               <div><Label>Supplier Name</Label><Input value={form.supplier_name} onChange={e => updateField('supplier_name', e.target.value)} /></div>
               <div><Label>Cost Price (hidden)</Label><Input type="number" value={form.cost_price} onChange={e => updateField('cost_price', Number(e.target.value))} /></div>
             </div>
-            <div><Label>Image URLs (comma sep.)</Label><Input value={form.images?.join(', ')} onChange={e => updateField('images', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
+            <ProductImageUploader images={form.images || []} onChange={v => updateField('images', v)} />
             <div><Label>Tags (comma sep.)</Label><Input value={form.tags?.join(', ')} onChange={e => updateField('tags', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
