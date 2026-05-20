@@ -43,7 +43,7 @@ export default function Navbar({ cartCount = 0 }) {
             <span className="hidden sm:inline text-muted-foreground">|</span>
             <span className="hidden sm:inline text-muted-foreground">Nigeria's Trusted Chemical & Industrial Marketplace</span>
           </div>
-          <Link to="/admin" className="text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/login" className="text-muted-foreground hover:text-primary transition-colors">
             Admin
           </Link>
         </div>
