@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, FileText, Download, ChevronLeft, Package, Globe, Beaker, MessageCircle } from 'lucide-react';
 import ProductCard from '@/components/shared/ProductCard';
+import ColorSwatch from '@/components/shared/ColorSwatch';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -19,6 +20,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedPackaging, setSelectedPackaging] = useState('');
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedColor, setSelectedColor] = useState('');
 
   const { data: allProducts = [] } = useQuery({
     queryKey: ['products'],
@@ -54,7 +56,7 @@ export default function ProductDetail() {
     return <span className="text-xl font-semibold text-primary">Request Quote for Pricing</span>;
   };
 
-  const whatsappMsg = `Hello ChemMart, I'm interested in:\n\n*${product.name}*\n${product.grade ? `Grade: ${product.grade}\n` : ''}Quantity: ${quantity}\n${selectedPackaging ? `Packaging: ${selectedPackaging}\n` : ''}\nPlease send me pricing and availability details.`;
+  const whatsappMsg = `Hello ChemMart, I'm interested in:\n\n*${product.name}*\n${product.grade ? `Grade: ${product.grade}\n` : ''}${selectedColor ? `Color: ${selectedColor}\n` : ''}Quantity: ${quantity}\n${selectedPackaging ? `Packaging: ${selectedPackaging}\n` : ''}\nPlease send me pricing and availability details.`;
 
   const handleAddToCart = () => {
     addItem(product, quantity, selectedPackaging);
@@ -137,6 +139,28 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
+
+          {/* Colors */}
+          {product.available_colors?.length > 0 && (
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">
+                Color: {selectedColor && <span className="text-primary font-semibold">{selectedColor}</span>}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {product.available_colors.map(color => (
+                  <div key={color} className="flex flex-col items-center gap-1">
+                    <ColorSwatch
+                      color={color}
+                      size="md"
+                      selected={selectedColor === color}
+                      onClick={() => setSelectedColor(selectedColor === color ? '' : color)}
+                    />
+                    <span className="text-xs text-muted-foreground capitalize">{color}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Packaging & Quantity */}
           <div className="space-y-4 mb-6">

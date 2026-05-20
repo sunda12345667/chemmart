@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatPrice, STOCK_STATUS_LABELS, STOCK_STATUS_COLORS } from '@/lib/constants';
+import ColorSwatch from '@/components/shared/ColorSwatch';
 
 export default function ProductCard({ product, onAddToCart }) {
   const renderPrice = () => {
@@ -44,6 +45,16 @@ export default function ProductCard({ product, onAddToCart }) {
             <p className="text-xs text-muted-foreground mt-1 line-clamp-1">Grade: {product.grade}</p>
           )}
         </Link>
+        {product.available_colors?.length > 0 && (
+          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+            {product.available_colors.slice(0, 6).map(color => (
+              <ColorSwatch key={color} color={color} size="sm" />
+            ))}
+            {product.available_colors.length > 6 && (
+              <span className="text-xs text-muted-foreground">+{product.available_colors.length - 6}</span>
+            )}
+          </div>
+        )}
         <div className="mt-auto pt-2">
           <div className="mb-1.5 text-xs sm:text-base">{renderPrice()}</div>
           {product.minimum_order_qty > 1 && (

@@ -39,6 +39,13 @@
     "country_of_origin": {
       "type": "string"
     },
+    "available_colors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Available colors for this product (e.g. White, Black, Red, Blue, Natural, Transparent)"
+    },
     "packaging_sizes": {
       "type": "array",
       "items": {

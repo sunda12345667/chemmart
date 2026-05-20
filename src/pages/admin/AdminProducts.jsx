@@ -247,6 +247,15 @@ export default function AdminProducts() {
               <div><Label>MOQ</Label><Input type="number" value={form.minimum_order_qty} onChange={e => updateField('minimum_order_qty', Number(e.target.value))} /></div>
               <div><Label>Packaging Sizes (comma sep.)</Label><Input value={form.packaging_sizes?.join(', ')} onChange={e => updateField('packaging_sizes', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
             </div>
+            <div>
+              <Label>Available Colors (comma sep.)</Label>
+              <Input
+                placeholder="e.g. White, Black, Red, Blue, Natural, Transparent"
+                value={form.available_colors?.join(', ') || ''}
+                onChange={e => updateField('available_colors', e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+              />
+              <p className="text-xs text-muted-foreground mt-1">Leave empty if product has no color variants</p>
+            </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div><Label>Supplier Name</Label><Input value={form.supplier_name} onChange={e => updateField('supplier_name', e.target.value)} /></div>
               <div><Label>Cost Price (hidden)</Label><Input type="number" value={form.cost_price} onChange={e => updateField('cost_price', Number(e.target.value))} /></div>
