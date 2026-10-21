@@ -1,18 +1,26 @@
 import React, { useRef, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { uploadFile } from '@/lib/storage';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
+/** @param {{ label?: string, imageUrl?: string, onChange: (imageUrl: string) => void }} props */
 export default function SingleImageUploader({ label = 'Image', imageUrl = '', onChange }) {
-  const inputRef = useRef();
+  const inputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [uploading, setUploading] = useState(false);
 
   const handleFile = async (file) => {
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    onChange(file_url);
-    setUploading(false);
+    try {
+      const { file_url } = await uploadFile({ file });
+      onChange(file_url);
+      toast.success('Image upload complete');
+    } catch (error) {
+      toast.error(error.message || 'Unable to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -53,7 +61,7 @@ export default function SingleImageUploader({ label = 'Image', imageUrl = '', on
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => handleFile(e.target.files[0])}
       />

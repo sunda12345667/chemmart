@@ -1,5 +1,8 @@
 import React from "react";
 
+/**
+ * @param {{ icon: import('react').ComponentType<any>, title: string, subtitle: string, footer?: import('react').ReactNode, children: import('react').ReactNode }} props
+ */
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -14,9 +17,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
         <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           {children}
         </div>
-        {footer && (
-          <p className="text-center text-sm text-muted-foreground mt-6">{footer}</p>
-        )}
+        {footer && <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>}
       </div>
     </div>
   );

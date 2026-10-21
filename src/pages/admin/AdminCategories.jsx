@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Category } from '@/lib/entities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,14 +20,14 @@ export default function AdminCategories() {
 
   const { data: categories = [] } = useQuery({
     queryKey: ['admin-categories'],
-    queryFn: () => base44.entities.Category.list('sort_order', 100),
+    queryFn: () => Category.list('sort_order', 100),
     initialData: [],
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data) => {
-      if (editing) return base44.entities.Category.update(editing.id, data);
-      return base44.entities.Category.create(data);
+    mutationFn: /** @param {Record<string, any>} data */ async (data) => {
+      if (editing) return Category.update(editing.id, data);
+      return Category.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
@@ -37,7 +37,7 @@ export default function AdminCategories() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Category.delete(id),
+    mutationFn: (id) => Category.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-categories'] });
       toast.success('Category deleted');

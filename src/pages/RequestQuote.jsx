@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
-import { buildWhatsAppUrl, NIGERIAN_STATES } from '@/lib/constants';
+import { submitPublicForm } from '@/lib/publicSubmission';
+import { NIGERIAN_STATES, WHATSAPP_NUMBER } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,12 +13,15 @@ import { CheckCircle, MessageCircle } from 'lucide-react';
 export default function RequestQuote() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
 
   const submitForm = async (type, formData) => {
     setSubmitting(true);
+    setSubmissionError('');
     const refId = `INQ-${Date.now().toString(36).toUpperCase()}`;
 
-    await base44.entities.Lead.create({
+    try {
+      await submitPublicForm({
       type,
       reference_id: refId,
       customer_name: formData.name,
@@ -30,10 +33,13 @@ export default function RequestQuote() {
       notes: formData.details,
       status: 'new',
       activity_log: [{ action: `${type} form submitted`, date: new Date().toISOString() }]
-    });
-
-    setSubmitting(false);
-    setSubmitted(true);
+      });
+      setSubmitted(true);
+    } catch (error) {
+      setSubmissionError(error.message || 'Unable to submit your request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -42,7 +48,7 @@ export default function RequestQuote() {
         <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
         <h1 className="font-heading text-2xl font-bold mb-2">Request Submitted!</h1>
         <p className="text-muted-foreground mb-6">Our team will contact you within 24 hours. You can also reach us directly on WhatsApp.</p>
-        <a href="https://wa.me/2349074648050?text=Hello%20ChemMart,%20I%20just%20submitted%20a%20request%20on%20your%20website." target="_blank" rel="noopener noreferrer">
+        <a href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello AMTECH GLOBAL SOLUTION SERVICES, I just submitted a request on your website.')}`} target="_blank" rel="noopener noreferrer">
           <Button className="bg-whatsapp hover:bg-whatsapp/90 text-white gap-2">
             <MessageCircle className="h-5 w-5" /> Chat on WhatsApp
           </Button>
@@ -58,19 +64,21 @@ export default function RequestQuote() {
         <p className="text-muted-foreground mt-2">Fill out the form and our team will get back to you within 24 hours</p>
       </div>
 
+      {submissionError && <p role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{submissionError}</p>}
+
       <Tabs defaultValue="bulk_quote">
         <TabsList className="grid grid-cols-2 w-full gap-1 h-auto p-1">
-          <TabsTrigger value="bulk_quote">Bulk Quote</TabsTrigger>
-          <TabsTrigger value="technical_inquiry">Technical Help</TabsTrigger>
-          <TabsTrigger value="machine_sourcing">Machine Sourcing</TabsTrigger>
-          <TabsTrigger value="product_inquiry">Product Help</TabsTrigger>
+          <TabsTrigger value="bulk_quote">Equipment Quote</TabsTrigger>
+          <TabsTrigger value="technical_inquiry">NAFDAC & Technical</TabsTrigger>
+          <TabsTrigger value="machine_sourcing">Equipment Sourcing</TabsTrigger>
+          <TabsTrigger value="product_inquiry">Contracting & Supervision</TabsTrigger>
         </TabsList>
 
         {[
-          { key: 'bulk_quote', title: 'Request Bulk Quote', desc: 'Get competitive bulk pricing for your order', detailLabel: 'Products & Quantities Needed' },
-          { key: 'technical_inquiry', title: 'Ask Technical Expert', desc: 'Get expert guidance on chemical or material selection', detailLabel: 'Describe Your Technical Question' },
-          { key: 'machine_sourcing', title: 'Machine Sourcing Request', desc: 'Tell us what machine you need and we\'ll find it', detailLabel: 'Machine Type & Specifications Needed' },
-          { key: 'product_inquiry', title: 'Need Help Choosing?', desc: 'Tell us your application and we\'ll recommend products', detailLabel: 'Describe Your Application or Need' },
+          { key: 'bulk_quote', title: 'Request an Equipment/Materials Quote', desc: 'Get competitive pricing for equipment, materials or bulk supply', detailLabel: 'Items & Quantities Needed' },
+          { key: 'technical_inquiry', title: 'NAFDAC & Technical Consultancy', desc: 'Get expert guidance on NAFDAC compliance, water treatment or installation questions', detailLabel: 'Describe Your Technical Question' },
+          { key: 'machine_sourcing', title: 'Equipment Sourcing Request', desc: 'Tell us what equipment you need and we\'ll source it', detailLabel: 'Equipment Type & Specifications Needed' },
+          { key: 'product_inquiry', title: 'Building Supervision & General Contracting', desc: 'Tell us about your project and we\'ll get back to you', detailLabel: 'Describe Your Project or Requirement' },
         ].map(tab => (
           <TabsContent key={tab.key} value={tab.key}>
             <QuoteForm

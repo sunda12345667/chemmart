@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -9,28 +7,26 @@ const DefaultFallback = () => (
   </div>
 );
 
-export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authChecked, authError, checkUserAuth } = useAuth();
+const NotAuthorized = () => (
+  <div className="fixed inset-0 flex flex-col items-center justify-center gap-2 text-center px-4">
+    <h1 className="text-xl font-semibold">Not authorized</h1>
+    <p className="text-muted-foreground">Your account does not have admin access.</p>
+  </div>
+);
 
-  useEffect(() => {
-    if (!authChecked && !isLoadingAuth) {
-      checkUserAuth();
-    }
-  }, [authChecked, isLoadingAuth, checkUserAuth]);
+export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
+  const { isAuthenticated, isAdmin, isLoadingAuth, authChecked } = useAuth();
 
   if (isLoadingAuth || !authChecked) {
     return fallback;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
+  if (!isAuthenticated) {
     return unauthenticatedElement;
   }
 
-  if (!isAuthenticated) {
-    return unauthenticatedElement;
+  if (!isAdmin) {
+    return <NotAuthorized />;
   }
 
   return <Outlet />;

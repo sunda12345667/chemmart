@@ -1,39 +1,64 @@
-**Welcome to your Base44 project** 
+# AMTECH Global Solution Services
 
-**About**
+Website and admin dashboard for AMTECH GLOBAL SOLUTION SERVICES — engineering,
+equipment and contracting solutions covering water treatment, borehole
+drilling, plumbing and fitting, equipment supply, building supervision,
+NAFDAC consultancy and general contracting.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+**Stack:** React + Vite, Tailwind CSS, [Supabase](https://supabase.com)
+(Postgres database, auth, and file storage).
 
-This project contains everything you need to run your app locally.
+## Local development
 
-**Edit the code in your local development environment**
+1. Install dependencies: `npm install`
+2. Copy `.env.example` to `.env` and set your Supabase project's URL and
+   anon/publishable key. The application is pinned to the AMTECH project
+   `https://cxgxwfsssrbuvwfrrsne.supabase.co` and rejects a different project URL:
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+   ```
+   VITE_SUPABASE_URL=https://cxgxwfsssrbuvwfrrsne.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_publishable_key
+   SUPABASE_URL=https://cxgxwfsssrbuvwfrrsne.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your_server_only_service_role_key
+   ```
 
-**Prerequisites:** 
+3. Apply the database schema: run `supabase/migrations/0001_init.sql` in
+   your project's Supabase SQL Editor (or via `supabase db push` if you use
+   the Supabase CLI).
+4. Run the app: `npm run dev`
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
+## Admin access
 
-```
-VITE_BASE44_APP_ID=your_app_id
-VITE_BASE44_APP_BASE_URL=your_backend_url
+Admin access is enforced by PostgreSQL RLS as well as the frontend route guards.
+The bootstrap account configured in migration `0002_admin_operations.sql` is
+`amtechglobalsolution2010@gmail.com`. Confirm that account exists and is
+controlled by the intended administrator before executing that migration.
+Never promote users through browser-side SQL or an ordinary admin account.
+Admin routes live under `/admin`.
 
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
-```
+## Production release checklist
 
-Run the app: `npm run dev`
-
-**Publish your changes**
-
-Open [Base44.com](http://Base44.com) and click on Publish.
-
-**Docs & Support**
-
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
-
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+1. Create/use a non-production Supabase project for preview. Review the live schema
+   and policies first; take a backup before applying SQL. Apply migrations in order:
+   `0001_init.sql` through `0006_company_settings_confidentiality.sql`. Do not run
+   these migrations against production until the owner explicitly approves them.
+   Migrations `0004`–`0006` include new server-side form submission, rate limiting,
+   restricted product projections, and settings access changes and require review.
+2. Confirm the intended super-admin account exists before applying migration `0002`;
+   verify the role afterward in Supabase. Never expose a service-role key in frontend
+   code, a `VITE_*` variable, or logs.
+3. Set these Vercel environment variables for both Preview and Production:
+   `VITE_SUPABASE_URL=https://cxgxwfsssrbuvwfrrsne.supabase.co` and
+   `VITE_SUPABASE_ANON_KEY` (browser publishable key). For
+   `/api/public-submissions`, also set server-only
+   `SUPABASE_URL=https://cxgxwfsssrbuvwfrrsne.supabase.co` and
+   `SUPABASE_SERVICE_ROLE_KEY`. Never use a `VITE_` prefix for the service-role
+   key. The API and browser client reject a URL for any other Supabase project.
+4. Configure Supabase Auth Site URL and redirect allowlist for the preview domain,
+   `/reset-password`, and OAuth callback if Google sign-in is enabled. Enable MFA
+   for the super-admin account.
+5. Deploy a Vercel Preview only after those environment variables and the reviewed
+   staging migrations are in place. Test direct route refresh, sign-in/reset,
+   anonymous form rate limiting, product uploads, and admin workflows in preview.
+   Promote to Production only after explicit approval and a separate production
+   migration/backup review. WhoGoHost DNS changes are a separate manual step.

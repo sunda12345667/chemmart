@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatPrice, STOCK_STATUS_LABELS, STOCK_STATUS_COLORS } from '@/lib/constants';
 import ColorSwatch from '@/components/shared/ColorSwatch';
 
+/** @param {{ product: any, onAddToCart?: (product: any) => void }} props */
 export default function ProductCard({ product, onAddToCart }) {
   const renderPrice = () => {
     if (product.price_mode === 'fixed' && product.price) {
@@ -19,6 +20,7 @@ export default function ProductCard({ product, onAddToCart }) {
   };
 
   const stockStatus = product.stock_status || 'in_stock';
+  const canBuy = stockStatus !== 'out_of_stock' || product.allow_backorders;
   const productImage = product.images?.[0] || 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&h=300&fit=crop';
 
   return (
@@ -65,10 +67,11 @@ export default function ProductCard({ product, onAddToCart }) {
               size="sm"
               variant="outline"
               className="flex-1 text-xs h-8 px-2"
+              disabled={!canBuy || product.product_type === 'quote_only'}
               onClick={(e) => { e.preventDefault(); onAddToCart?.(product); }}
             >
               <ShoppingCart className="h-3 w-3 mr-1 flex-shrink-0" />
-              <span className="hidden xs:inline">Add to </span>Cart
+              {canBuy && product.product_type !== 'quote_only' ? <><span className="hidden xs:inline">Add to </span>Cart</> : 'Out of Stock'}
             </Button>
             <Link to={`/product/${product.slug || product.id}`}>
               <Button size="sm" variant="ghost" className="h-8 w-8 p-0">

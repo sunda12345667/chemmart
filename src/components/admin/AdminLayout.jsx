@@ -1,16 +1,26 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Tag, Users, FileText, Settings, ChevronLeft, Menu, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, Tag, Users, FileText, Settings, ChevronLeft, Menu, LogOut, Boxes, ShoppingCart, Wrench, ClipboardList, ReceiptText, Image, FilePenLine, ShieldCheck, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 
 const NAV_ITEMS = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/admin/products', label: 'Products', icon: Package },
   { path: '/admin/categories', label: 'Categories', icon: Tag },
-  { path: '/admin/leads', label: 'Leads & Orders', icon: Users },
-  { path: '/admin/blog', label: 'Blog Posts', icon: FileText },
+  { path: '/admin/inventory', label: 'Inventory', icon: Boxes },
+  { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
+  { path: '/admin/customers', label: 'Customers', icon: Users },
+  { path: '/admin/services', label: 'Services', icon: Wrench },
+  { path: '/admin/service-requests', label: 'Service Requests', icon: ClipboardList },
+  { path: '/admin/quotes', label: 'Quote Requests', icon: FileText },
+  { path: '/admin/invoices', label: 'Invoices', icon: ReceiptText },
+  { path: '/admin/media', label: 'Media', icon: Image },
+  { path: '/admin/content', label: 'Website Content', icon: FilePenLine, superAdmin: true },
+  { path: '/admin/settings', label: 'Settings', icon: Settings, superAdmin: true },
+  { path: '/admin/users', label: 'Admin Users', icon: ShieldCheck, superAdmin: true },
+  { path: '/admin/audit-logs', label: 'Audit Logs', icon: History, superAdmin: true },
 ];
 
 export default function AdminLayout() {
@@ -18,6 +28,7 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout, isSuperAdmin } = useAuth();
 
   const isActive = (path, exact) => {
     if (exact) return location.pathname === path;
@@ -25,25 +36,26 @@ export default function AdminLayout() {
   };
 
   const handleLogout = async () => {
-    await base44.auth.logout('/');
+    await logout();
+    navigate('/');
   };
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-sidebar-border">
-        <Link to="/admin" className="font-heading text-lg font-bold text-sidebar-foreground">
-          <span className="text-primary">Chem</span>Mart
+        <Link to="/admin/dashboard" className="font-heading text-lg font-bold text-sidebar-foreground">
+          <span className="text-primary">AM</span>TECH
         </Link>
         <p className="text-xs text-muted-foreground mt-0.5">Admin Panel</p>
       </div>
-      <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map(item => (
+      <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-1">
+        {NAV_ITEMS.filter(item => !item.superAdmin || isSuperAdmin).map(item => (
           <Link
             key={item.path}
             to={item.path}
             onClick={() => setMobileOpen(false)}
             className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors opacity-100',
               isActive(item.path, item.exact)
                 ? 'bg-sidebar-primary text-sidebar-primary-foreground'
                 : 'text-sidebar-foreground hover:bg-sidebar-accent'
@@ -68,7 +80,7 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className={cn('hidden lg:flex flex-col bg-sidebar border-r border-sidebar-border transition-all', collapsed ? 'w-16' : 'w-60')}>
+      <aside className={cn('hidden lg:flex h-dvh flex-col bg-sidebar border-r border-sidebar-border transition-all', collapsed ? 'w-16' : 'w-60')}>
         <SidebarContent />
       </aside>
 

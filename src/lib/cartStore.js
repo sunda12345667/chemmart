@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const CART_KEY = 'chemcart_items';
+const CART_KEY = 'amtech_cart_items';
 
 function getStoredCart() {
   try {

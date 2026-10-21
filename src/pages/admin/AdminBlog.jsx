@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { BlogPost } from '@/lib/entities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,14 +21,14 @@ export default function AdminBlog() {
 
   const { data: posts = [] } = useQuery({
     queryKey: ['admin-blog'],
-    queryFn: () => base44.entities.BlogPost.list('-created_date', 100),
+    queryFn: () => BlogPost.list('-created_date', 100),
     initialData: [],
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (data) => {
-      if (editing) return base44.entities.BlogPost.update(editing.id, data);
-      return base44.entities.BlogPost.create(data);
+    mutationFn: /** @param {Record<string, any>} data */ async (data) => {
+      if (editing) return BlogPost.update(editing.id, data);
+      return BlogPost.create(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-blog'] });
@@ -38,14 +38,14 @@ export default function AdminBlog() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.BlogPost.delete(id),
+    mutationFn: (id) => BlogPost.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-blog'] });
       toast.success('Post deleted');
     },
   });
 
-  const openCreate = () => { setEditing(null); setForm({ title: '', slug: '', excerpt: '', content: '', cover_image: '', category: 'buying_guide', is_published: false }); setDialogOpen(true); };
+  const openCreate = () => { setEditing(null); setForm({ title: '', slug: '', excerpt: '', content: '', cover_image: '', category: 'buying_guide', is_published: false, seo_title: '', seo_description: '' }); setDialogOpen(true); };
   const openEdit = (p) => { setEditing(p); setForm(p); setDialogOpen(true); };
 
   return (

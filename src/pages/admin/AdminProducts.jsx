@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Product } from '@/lib/entities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,61 +14,62 @@ import { Switch } from '@/components/ui/switch';
 import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import ProductImageUploader from '@/components/admin/ProductImageUploader';
 import { STOCK_STATUS_LABELS, STOCK_STATUS_COLORS, formatPrice } from '@/lib/constants';
+import { Category } from '@/lib/entities';
 import { toast } from 'sonner';
 
-const CATEGORIES = [
-  { slug: 'chemicals', name: 'Chemicals' },
-  { slug: 'plastic-raw-materials', name: 'Plastic Raw Materials' },
-  { slug: 'production-machines', name: 'Production Machines' },
-  { slug: 'packaging-materials', name: 'Packaging Materials' },
-  { slug: 'cleaning-chemical-raw-materials', name: 'Cleaning Chemicals' },
-  { slug: 'additives', name: 'Additives' },
-  { slug: 'recycled-materials', name: 'Recycled Materials' },
-  { slug: 'spare-parts', name: 'Spare Parts' },
-];
-
 const EMPTY_PRODUCT = {
-  name: '', slug: '', category_id: '', short_description: '', technical_description: '',
+  name: '', slug: '', sku: '', brand: '', category_id: '', short_description: '', technical_description: '',
   applications: '', grade: '', purity: '', country_of_origin: '', packaging_sizes: [],
   minimum_order_qty: 1, price_mode: 'quote', price: 0, price_min: 0, price_max: 0,
   stock_status: 'in_stock', images: [], tags: [], is_featured: false, is_active: true,
   seo_title: '', seo_description: '', supplier_name: '', cost_price: 0, warehouse_location: '',
-  machine_type: '', production_capacity: ''
+  machine_type: '', production_capacity: '', stock_quantity: 0, low_stock_threshold: 5,
+  allow_backorders: false, product_type: 'physical', specifications: []
 };
 
 export default function AdminProducts() {
+  const { id } = useParams(); const navigate = useNavigate(); const location = useLocation();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_PRODUCT);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['admin-products'],
-    queryFn: () => base44.entities.Product.list('-created_date', 200),
+    queryFn: () => Product.list('-created_date', 200),
     initialData: [],
   });
+  const { data: categories = [] } = useQuery({ queryKey: ['admin-categories'], queryFn: () => Category.list('sort_order', 100), initialData: [] });
+  useEffect(() => {
+    if (location.pathname.endsWith('/new')) { setEditing(null); setForm(EMPTY_PRODUCT); setDialogOpen(true); return; }
+    if (id && products.length) { const product = products.find(p => p.id === id); if (product) { setEditing(product); setForm({ ...EMPTY_PRODUCT, ...product }); setDialogOpen(true); } }
+  }, [id, location.pathname, products]);
 
   const saveMutation = useMutation({
-    mutationFn: async (data) => {
+    mutationFn: /** @param {Record<string, any>} data */ async (data) => {
       if (editing) {
-        await base44.entities.Product.update(editing.id, data);
+        await Product.update(editing.id, data);
       } else {
-        await base44.entities.Product.create(data);
+        await Product.create(data);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       setDialogOpen(false);
+      navigate('/admin/products');
       toast.success(editing ? 'Product updated' : 'Product created');
     },
+    onError: (error) => toast.error(error.message || 'Unable to save product. Please try again.'),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Product.delete(id),
+    mutationFn: (id) => Product.update(id, { is_active: false, deleted_at: new Date().toISOString() }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast.success('Product deleted');
+      setDeleteTarget(null);
+      toast.success('Product archived');
     },
   });
 
@@ -80,15 +82,13 @@ export default function AdminProducts() {
     saveMutation.mutate({ ...form, slug });
   };
 
-  const filtered = products.filter(p =>
-    !search || p.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter(p => !search || [p.name, p.sku, p.category_id].some(v => v?.toLowerCase().includes(search.toLowerCase())));
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-xl sm:text-2xl font-bold">Products</h1>
-        <Button onClick={openCreate} className="gap-1.5 text-sm"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add </span>Product</Button>
+        <Button asChild className="gap-1.5 text-sm"><Link to="/admin/products/new"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add </span>Product</Link></Button>
       </div>
 
       <div className="relative max-w-sm">
@@ -103,7 +103,7 @@ export default function AdminProducts() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left bg-muted/50">
-                  <th className="p-3">Product</th>
+                  <th className="p-3">Product</th><th className="p-3">SKU</th>
                   <th className="p-3">Category</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Stock</th>
@@ -125,7 +125,7 @@ export default function AdminProducts() {
                         </div>
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground capitalize">{p.category_id?.replace(/-/g, ' ')}</td>
+                    <td className="p-3 font-mono text-xs">{p.sku || '—'}</td><td className="p-3 text-muted-foreground capitalize">{p.category_id?.replace(/-/g, ' ')}</td>
                     <td className="p-3">
                       {p.price_mode === 'fixed' ? formatPrice(p.price) : p.price_mode === 'range' ? `${formatPrice(p.price_min)}–${formatPrice(p.price_max)}` : 'Quote'}
                     </td>
@@ -135,14 +135,14 @@ export default function AdminProducts() {
                     <td className="p-3">{p.is_featured ? <Badge className="bg-accent text-accent-foreground text-xs">Yes</Badge> : '—'}</td>
                     <td className="p-3">
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                        <Link to={`/admin/products/${p.id}/edit`}><Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button></Link>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : 'No products found'}</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : 'No products found'}</td></tr>
                 )}
               </tbody>
             </table>
@@ -171,8 +171,8 @@ export default function AdminProducts() {
                   </p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteMutation.mutate(p.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <Link to={`/admin/products/${p.id}/edit`}><Button variant="ghost" size="icon" className="h-8 w-8"><Pencil className="h-4 w-4" /></Button></Link>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             </CardContent>
@@ -184,7 +184,7 @@ export default function AdminProducts() {
       </div>
 
       {/* Product Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open && location.pathname !== '/admin/products') navigate('/admin/products'); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit Product' : 'Create Product'}</DialogTitle>
@@ -192,12 +192,14 @@ export default function AdminProducts() {
           <div className="space-y-4 py-2">
             <div className="grid sm:grid-cols-2 gap-4">
               <div><Label>Product Name *</Label><Input value={form.name} onChange={e => updateField('name', e.target.value)} /></div>
+              <div><Label>SKU</Label><Input value={form.sku} onChange={e => updateField('sku', e.target.value)} /></div>
               <div><Label>Slug</Label><Input value={form.slug} onChange={e => updateField('slug', e.target.value)} placeholder="auto-generated" /></div>
+              <div><Label>Brand</Label><Input value={form.brand} onChange={e => updateField('brand', e.target.value)} /></div>
               <div>
                 <Label>Category *</Label>
                 <Select value={form.category_id} onValueChange={v => updateField('category_id', v)}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{CATEGORIES.map(c => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
@@ -221,6 +223,7 @@ export default function AdminProducts() {
               <div><Label>Purity</Label><Input value={form.purity} onChange={e => updateField('purity', e.target.value)} /></div>
               <div><Label>Origin Country</Label><Input value={form.country_of_origin} onChange={e => updateField('country_of_origin', e.target.value)} /></div>
             </div>
+            <div className="grid sm:grid-cols-3 gap-4"><div><Label>Product Type</Label><Select value={form.product_type} onValueChange={v => updateField('product_type', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="physical">Physical Product</SelectItem><SelectItem value="service">Service</SelectItem><SelectItem value="quote_only">Quote Only</SelectItem></SelectContent></Select></div><div><Label>Stock Quantity</Label><Input type="number" value={form.stock_quantity} onChange={e => updateField('stock_quantity', Number(e.target.value))}/></div><div><Label>Low Stock Threshold</Label><Input type="number" value={form.low_stock_threshold} onChange={e => updateField('low_stock_threshold', Number(e.target.value))}/></div></div>
             <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <Label>Price Mode</Label>
@@ -280,6 +283,12 @@ export default function AdminProducts() {
               {saveMutation.isPending ? 'Saving...' : editing ? 'Update Product' : 'Create Product'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent><DialogHeader><DialogTitle>Archive product?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">“{deleteTarget?.name}” will be removed from the storefront. Historical order references remain available.</p>
+          <DialogFooter><Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button><Button variant="destructive" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(deleteTarget.id)}>{deleteMutation.isPending ? 'Archiving…' : 'Archive product'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

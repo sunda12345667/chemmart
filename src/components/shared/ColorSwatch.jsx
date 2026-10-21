@@ -29,11 +29,13 @@ const COLOR_MAP = {
   lime: '#32cd32',
 };
 
+/** @param {string} name */
 function getColor(name) {
   return COLOR_MAP[name.toLowerCase()] || '#cccccc';
 }
 
-export default function ColorSwatch({ color, size = 'md', selected, onClick }) {
+/** @param {{ color: string, size?: 'sm' | 'md', selected?: boolean, onClick?: () => void }} props */
+export default function ColorSwatch({ color, size = 'md', selected = false, onClick }) {
   const bg = getColor(color);
   const isTransparent = bg === 'transparent';
   const sizeClass = size === 'sm' ? 'w-4 h-4' : 'w-6 h-6';

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Product } from '@/lib/entities';
 import { useCart } from '@/lib/cartStore';
 import ProductCard from '@/components/shared/ProductCard';
 import { Input } from '@/components/ui/input';
@@ -9,17 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-
-const CATEGORIES = [
-  { slug: 'chemicals', name: 'Chemicals' },
-  { slug: 'plastic-raw-materials', name: 'Plastic Raw Materials' },
-  { slug: 'production-machines', name: 'Production Machines' },
-  { slug: 'packaging-materials', name: 'Packaging Materials' },
-  { slug: 'cleaning-chemical-raw-materials', name: 'Cleaning Chemicals' },
-  { slug: 'additives', name: 'Additives' },
-  { slug: 'recycled-materials', name: 'Recycled Materials' },
-  { slug: 'spare-parts', name: 'Spare Parts' },
-];
+import { CATEGORIES } from '@/lib/constants';
 
 export default function Products() {
   const params = new URLSearchParams(window.location.search);
@@ -34,7 +24,7 @@ export default function Products() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.filter({ is_active: true }, '-created_date', 100),
+    queryFn: () => Product.filter({ is_active: true }, '-created_date', 100),
     initialData: [],
   });
 

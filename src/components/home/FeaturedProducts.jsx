@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/shared/ProductCard';
 import { motion } from 'framer-motion';
 
+/** @param {{ products?: any[], title?: string, subtitle?: string, linkTo?: string, onAddToCart?: (product: any) => void }} props */
 export default function FeaturedProducts({ products = [], title = "Featured Products", subtitle, linkTo = "/products", onAddToCart }) {
   if (!products.length) return null;
 

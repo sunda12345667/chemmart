@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Lead } from '@/lib/entities';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageCircle, Eye, Phone } from 'lucide-react';
+import { MessageCircle, Eye } from 'lucide-react';
 import { LEAD_STATUS_LABELS, LEAD_STATUS_COLORS, formatPrice } from '@/lib/constants';
 import { toast } from 'sonner';
 
@@ -22,12 +22,12 @@ export default function AdminLeads() {
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['admin-leads'],
-    queryFn: () => base44.entities.Lead.list('-created_date', 200),
+    queryFn: () => Lead.list('-created_date', 200),
     initialData: [],
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Lead.update(id, data),
+    mutationFn: /** @param {{ id: string, data: Record<string, any> }} variables */ ({ id, data }) => Lead.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-leads'] });
       toast.success('Lead updated');
@@ -51,7 +51,7 @@ export default function AdminLeads() {
   };
 
   const getWhatsAppFollowup = (lead) => {
-    const msg = `Hello ${lead.customer_name}, this is ChemMart.ng following up on your ${lead.type?.replace(/_/g, ' ')} (Ref: ${lead.reference_id || '—'}). How can we help you today?`;
+    const msg = `Hello ${lead.customer_name}, this is AMTECH GLOBAL SOLUTION SERVICES following up on your ${lead.type?.replace(/_/g, ' ')} (Ref: ${lead.reference_id || '—'}). How can we help you today?`;
     return `https://wa.me/${lead.customer_phone?.replace(/^0/, '234')}?text=${encodeURIComponent(msg)}`;
   };
 

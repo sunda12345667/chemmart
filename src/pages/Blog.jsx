@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { BlogPost } from '@/lib/entities';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CalendarDays } from 'lucide-react';
@@ -9,7 +9,7 @@ import { CalendarDays } from 'lucide-react';
 export default function Blog() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['blog-posts'],
-    queryFn: () => base44.entities.BlogPost.filter({ is_published: true }, '-created_date', 50),
+    queryFn: () => BlogPost.filter({ is_published: true }, '-created_date', 50),
     initialData: [],
   });
 

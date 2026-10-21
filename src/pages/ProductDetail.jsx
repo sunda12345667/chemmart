@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { Product } from '@/lib/entities';
 import { useCart } from '@/lib/cartStore';
-import { formatPrice, STOCK_STATUS_LABELS, STOCK_STATUS_COLORS } from '@/lib/constants';
+import { formatPrice, STOCK_STATUS_LABELS, STOCK_STATUS_COLORS, WHATSAPP_NUMBER } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, FileText, Download, ChevronLeft, Package, Globe, Beaker, MessageCircle } from 'lucide-react';
+import { ShoppingCart, FileText, Download, Package, Globe, Beaker, MessageCircle } from 'lucide-react';
 import ProductCard from '@/components/shared/ProductCard';
 import ColorSwatch from '@/components/shared/ColorSwatch';
 
@@ -24,7 +24,7 @@ export default function ProductDetail() {
 
   const { data: allProducts = [] } = useQuery({
     queryKey: ['products'],
-    queryFn: () => base44.entities.Product.filter({ is_active: true }, '-created_date', 100),
+    queryFn: () => Product.filter({ is_active: true }, '-created_date', 100),
     initialData: [],
   });
 
@@ -43,8 +43,9 @@ export default function ProductDetail() {
     );
   }
 
-  const images = product.images?.length ? product.images : ['https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=600&h=450&fit=crop'];
+  const images = product.images?.length ? product.images : ['https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&h=450&fit=crop'];
   const stockStatus = product.stock_status || 'in_stock';
+  const canBuy = stockStatus !== 'out_of_stock' || product.allow_backorders;
 
   const renderPrice = () => {
     if (product.price_mode === 'fixed' && product.price) {
@@ -56,7 +57,7 @@ export default function ProductDetail() {
     return <span className="text-xl font-semibold text-primary">Request Quote for Pricing</span>;
   };
 
-  const whatsappMsg = `Hello ChemMart, I'm interested in:\n\n*${product.name}*\n${product.grade ? `Grade: ${product.grade}\n` : ''}${selectedColor ? `Color: ${selectedColor}\n` : ''}Quantity: ${quantity}\n${selectedPackaging ? `Packaging: ${selectedPackaging}\n` : ''}\nPlease send me pricing and availability details.`;
+  const whatsappMsg = `Hello AMTECH GLOBAL SOLUTION SERVICES, I'm interested in:\n\n*${product.name}*\n${product.grade ? `Grade: ${product.grade}\n` : ''}${selectedColor ? `Color: ${selectedColor}\n` : ''}Quantity: ${quantity}\n${selectedPackaging ? `Packaging: ${selectedPackaging}\n` : ''}\nPlease send me pricing and availability details.`;
 
   const handleAddToCart = () => {
     addItem(product, quantity, selectedPackaging);
@@ -191,11 +192,11 @@ export default function ProductDetail() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button size="lg" className="flex-1 gap-2" onClick={handleAddToCart}>
-              <ShoppingCart className="h-5 w-5" /> Add to Cart
+            <Button size="lg" className="flex-1 gap-2" onClick={handleAddToCart} disabled={!canBuy || product.product_type === 'quote_only'}>
+              <ShoppingCart className="h-5 w-5" /> {canBuy && product.product_type !== 'quote_only' ? 'Add to Cart' : 'Out of Stock'}
             </Button>
             <a
-              href={`https://wa.me/2349074648050?text=${encodeURIComponent(whatsappMsg)}`}
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMsg)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1"

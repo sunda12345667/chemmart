@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, X, Phone, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Search, Menu, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-
-const CATEGORIES = [
-  { name: 'Chemicals', slug: 'chemicals' },
-  { name: 'Plastic Raw Materials', slug: 'plastic-raw-materials' },
-  { name: 'Production Machines', slug: 'production-machines' },
-  { name: 'Packaging Materials', slug: 'packaging-materials' },
-  { name: 'Cleaning Chemicals', slug: 'cleaning-chemical-raw-materials' },
-  { name: 'Additives', slug: 'additives' },
-  { name: 'Recycled Materials', slug: 'recycled-materials' },
-  { name: 'Spare Parts', slug: 'spare-parts' },
-];
+import { CATEGORIES, COMPANY_PHONE, COMPANY_TAGLINE, WHATSAPP_NUMBER } from '@/lib/constants';
 
 export default function Navbar({ cartCount = 0 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,12 +26,12 @@ export default function Navbar({ cartCount = 0 }) {
       <div className="bg-secondary text-secondary-foreground">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
-            <a href="tel:09074648050" className="flex items-center gap-1 hover:text-primary transition-colors">
+            <a href={`tel:${COMPANY_PHONE}`} className="flex items-center gap-1 hover:text-primary transition-colors">
               <Phone className="h-3 w-3" />
-              <span>09074648050</span>
+              <span>{COMPANY_PHONE}</span>
             </a>
             <span className="hidden sm:inline text-muted-foreground">|</span>
-            <span className="hidden sm:inline text-muted-foreground">Nigeria's Trusted Chemical & Industrial Marketplace</span>
+            <span className="hidden sm:inline text-muted-foreground">{COMPANY_TAGLINE}</span>
           </div>
           <Link to="/login" className="text-muted-foreground hover:text-primary transition-colors">
             Admin
@@ -56,9 +46,8 @@ export default function Navbar({ cartCount = 0 }) {
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
               <h1 className="font-heading text-xl sm:text-2xl font-bold">
-                <span className="text-primary">Chem</span>
-                <span className="text-secondary">Mart</span>
-                <span className="text-primary">.ng</span>
+                <span className="text-primary">AM</span>
+                <span className="text-secondary">TECH</span>
               </h1>
             </Link>
 
@@ -67,7 +56,7 @@ export default function Navbar({ cartCount = 0 }) {
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search chemicals, plastics, machines..."
+                  placeholder="Search equipment, materials, services..."
                   className="pl-9 pr-20 h-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -92,7 +81,7 @@ export default function Navbar({ cartCount = 0 }) {
               </Link>
 
               <a
-                href="https://wa.me/2349074648050?text=Hello%20ChemMart,%20I%20need%20help%20with%20an%20order."
+                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hello AMTECH GLOBAL SOLUTION SERVICES, I need help with an order.')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:flex"
@@ -113,7 +102,7 @@ export default function Navbar({ cartCount = 0 }) {
                 <SheetContent side="left" className="w-80 p-0">
                   <div className="p-4 border-b">
                     <h2 className="font-heading text-lg font-bold">
-                      <span className="text-primary">Chem</span>Mart<span className="text-primary">.ng</span>
+                      <span className="text-primary">AM</span>TECH
                     </h2>
                   </div>
                   <form onSubmit={(e) => { handleSearch(e); setMobileOpen(false); }} className="p-4">

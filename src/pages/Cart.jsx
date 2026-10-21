@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/lib/cartStore';
-import { base44 } from '@/api/base44Client';
 import { formatPrice, generateReferenceId, buildWhatsAppUrl, NIGERIAN_STATES } from '@/lib/constants';
+import { submitPublicForm } from '@/lib/publicSubmission';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,11 +19,12 @@ export default function Cart() {
     name: '', phone: '', email: '', company: '', state: '', city: '', notes: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const generateMessage = (refId) => {
-    let msg = `📦 *NEW ORDER — ChemMart.ng*\n`;
+    let msg = `📦 *NEW ORDER — AMTECH GLOBAL SOLUTION SERVICES*\n`;
     msg += `━━━━━━━━━━━━━━━━━━\n`;
     msg += `📋 Order Ref: *${refId}*\n\n`;
     msg += `👤 *Customer Details*\n`;
@@ -57,7 +58,7 @@ export default function Cart() {
     if (form.notes) {
       msg += `\n📝 Notes: ${form.notes}\n`;
     }
-    msg += `\nSent via ChemMart.ng`;
+    msg += `\nSent via AMTECH GLOBAL SOLUTION SERVICES`;
     return msg;
   };
 
@@ -65,11 +66,12 @@ export default function Cart() {
     if (!form.name || !form.phone || !form.state || !form.city) return;
 
     setSubmitting(true);
+    setSubmissionError('');
     const refId = generateReferenceId();
     const message = generateMessage(refId);
 
-    // Save lead to database
-    await base44.entities.Lead.create({
+    try {
+      await submitPublicForm({
       type: 'whatsapp_checkout',
       reference_id: refId,
       customer_name: form.name,
@@ -91,14 +93,18 @@ export default function Cart() {
       status: 'new',
       whatsapp_message: message,
       activity_log: [{ action: 'Order submitted via WhatsApp', date: new Date().toISOString() }]
-    });
+      });
 
-    clearCart();
+      clearCart();
 
-    // Redirect to WhatsApp
-    window.open(buildWhatsAppUrl(message), '_blank');
-    setStep('cart');
-    setSubmitting(false);
+      // This is an enquiry handoff, not a verified online payment/order.
+      window.open(buildWhatsAppUrl(message), '_blank', 'noopener,noreferrer');
+      setStep('cart');
+    } catch (error) {
+      setSubmissionError(error.message || 'Unable to submit your enquiry. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (items.length === 0 && step === 'cart') {
@@ -166,6 +172,7 @@ export default function Cart() {
           <Card className="h-fit lg:sticky lg:top-36">
             <CardHeader><CardTitle>Order Summary</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              {submissionError && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{submissionError}</p>}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Items ({items.length})</span>
                 <span>{estimatedTotal > 0 ? formatPrice(estimatedTotal) : '—'}</span>

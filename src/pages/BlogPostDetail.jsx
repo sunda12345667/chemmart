@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { BlogPost } from '@/lib/entities';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, ArrowLeft } from 'lucide-react';
@@ -12,7 +12,7 @@ export default function BlogPostDetail() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['blog-post', slug],
-    queryFn: () => base44.entities.BlogPost.filter({ is_published: true }, '-created_date', 100),
+    queryFn: () => BlogPost.filter({ is_published: true }, '-created_date', 100),
     initialData: [],
   });
 
@@ -21,7 +21,7 @@ export default function BlogPostDetail() {
   // Increment view count once
   useEffect(() => {
     if (post?.id) {
-      base44.entities.BlogPost.update(post.id, { view_count: (post.view_count || 0) + 1 });
+      BlogPost.update(post.id, { view_count: (post.view_count || 0) + 1 });
     }
   }, [post?.id]);
 
