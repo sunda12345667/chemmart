@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, MessageCircle } from 'lucide-react';
+import { CheckCircle, Mail, MessageCircle, Phone } from 'lucide-react';
+import { COMPANY_EMAIL, COMPANY_PHONE, COMPANY_PHONE_TEL } from '@/lib/constants';
 
 export default function RequestQuote() {
   const [submitted, setSubmitted] = useState(false);
@@ -62,6 +63,14 @@ export default function RequestQuote() {
       <div className="text-center mb-8">
         <h1 className="font-heading text-2xl md:text-3xl font-bold">Get a Quote or Expert Help</h1>
         <p className="text-muted-foreground mt-2">Fill out the form and our team will get back to you within 24 hours</p>
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-sm">
+          <a href={COMPANY_PHONE_TEL} className="inline-flex items-center gap-2 text-primary hover:underline">
+            <Phone className="h-4 w-4" /> {COMPANY_PHONE}
+          </a>
+          <a href={`mailto:${COMPANY_EMAIL}`} className="inline-flex items-center gap-2 text-primary hover:underline">
+            <Mail className="h-4 w-4" /> {COMPANY_EMAIL}
+          </a>
+        </div>
       </div>
 
       {submissionError && <p role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{submissionError}</p>}

@@ -3,9 +3,9 @@ export const COMPANY_TAGLINE = "Engineering, Equipment & Industrial Solutions";
 export const COMPANY_DESCRIPTION =
   "AMTECH GLOBAL SOLUTION SERVICES provides engineering, equipment and contracting solutions covering water treatment, borehole drilling, plumbing and fitting, equipment supply, building supervision, NAFDAC consultancy and general contracting.";
 
-// TODO: replace with AMTECH's real contact details.
-export const COMPANY_PHONE = "+234 XXX XXX XXXX";
-export const COMPANY_EMAIL = "info@amtechgss.ng";
+export const COMPANY_PHONE = "+234 803 517 7394";
+export const COMPANY_PHONE_TEL = "tel:+2348035177394";
+export const COMPANY_EMAIL = "amtechglobalsolution2010@gmail.com";
 export const COMPANY_ADDRESS = "Lagos, Nigeria";
 
 export const WHATSAPP_NUMBER = "2348035177394";

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { CATEGORIES, COMPANY_PHONE, COMPANY_TAGLINE, WHATSAPP_NUMBER } from '@/lib/constants';
+import { CATEGORIES, COMPANY_PHONE, COMPANY_PHONE_TEL, COMPANY_TAGLINE, WHATSAPP_NUMBER } from '@/lib/constants';
 
 export default function Navbar({ cartCount = 0 }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +26,7 @@ export default function Navbar({ cartCount = 0 }) {
       <div className="bg-secondary text-secondary-foreground">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
-            <a href={`tel:${COMPANY_PHONE}`} className="flex items-center gap-1 hover:text-primary transition-colors">
+            <a href={COMPANY_PHONE_TEL} className="flex items-center gap-1 hover:text-primary transition-colors">
               <Phone className="h-3 w-3" />
               <span>{COMPANY_PHONE}</span>
             </a>

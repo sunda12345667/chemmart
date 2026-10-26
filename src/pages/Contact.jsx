@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
-import { COMPANY_NAME, COMPANY_PHONE, COMPANY_EMAIL, COMPANY_ADDRESS, WHATSAPP_NUMBER } from '@/lib/constants';
+import { COMPANY_NAME, COMPANY_PHONE, COMPANY_PHONE_TEL, COMPANY_EMAIL, COMPANY_ADDRESS, WHATSAPP_NUMBER } from '@/lib/constants';
 
 export default function Contact() {
   return (
@@ -14,7 +14,7 @@ export default function Contact() {
 
       <Card>
         <CardContent className="p-6 space-y-4">
-          <a href={`tel:${COMPANY_PHONE}`} className="flex items-center gap-3 text-sm hover:text-primary transition-colors">
+          <a href={COMPANY_PHONE_TEL} className="flex items-center gap-3 text-sm hover:text-primary transition-colors">
             <Phone className="h-5 w-5 text-primary" /> {COMPANY_PHONE}
           </a>
           <a href={`mailto:${COMPANY_EMAIL}`} className="flex items-center gap-3 text-sm hover:text-primary transition-colors">

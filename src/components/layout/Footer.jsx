@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin } from 'lucide-react';
-import { CATEGORIES, COMPANY_NAME, COMPANY_PHONE, COMPANY_EMAIL, COMPANY_ADDRESS } from '@/lib/constants';
+import { CATEGORIES, COMPANY_NAME, COMPANY_PHONE, COMPANY_PHONE_TEL, COMPANY_EMAIL, COMPANY_ADDRESS } from '@/lib/constants';
 
 export default function Footer() {
   return (
@@ -16,7 +16,7 @@ export default function Footer() {
               {COMPANY_NAME} provides engineering, equipment and contracting solutions covering water treatment, borehole drilling, plumbing and fitting, equipment supply, building supervision and general contracting.
             </p>
             <div className="mt-4 space-y-2 text-sm">
-              <a href={`tel:${COMPANY_PHONE}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+              <a href={COMPANY_PHONE_TEL} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
                 <Phone className="h-4 w-4" /> {COMPANY_PHONE}
               </a>
               <a href={`mailto:${COMPANY_EMAIL}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
