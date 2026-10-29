@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 
 const NAV_ITEMS = [
   { path: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/admin/products', label: 'Products', icon: Package },
+  { path: '/admin/products', label: 'Products', icon: Package, productAdmin: true },
   { path: '/admin/categories', label: 'Categories', icon: Tag },
   { path: '/admin/inventory', label: 'Inventory', icon: Boxes },
   { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
@@ -28,7 +28,8 @@ export default function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, isSuperAdmin } = useAuth();
+  const { logout, isSuperAdmin, profile } = useAuth();
+  const canManageProducts = ['admin', 'super_admin'].includes(profile?.role) && !profile?.is_disabled;
 
   const isActive = (path, exact) => {
     if (exact) return location.pathname === path;
@@ -49,7 +50,7 @@ export default function AdminLayout() {
         <p className="text-xs text-muted-foreground mt-0.5">Admin Panel</p>
       </div>
       <nav className="min-h-0 flex-1 overflow-y-auto p-3 space-y-1">
-        {NAV_ITEMS.filter(item => !item.superAdmin || isSuperAdmin).map(item => (
+        {NAV_ITEMS.filter(item => (!item.superAdmin || isSuperAdmin) && (!item.productAdmin || canManageProducts)).map(item => (
           <Link
             key={item.path}
             to={item.path}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/lib/entities';
@@ -16,6 +16,8 @@ import ProductImageUploader from '@/components/admin/ProductImageUploader';
 import { STOCK_STATUS_LABELS, STOCK_STATUS_COLORS, formatPrice } from '@/lib/constants';
 import { Category } from '@/lib/entities';
 import { toast } from 'sonner';
+import { removeUploadedFiles } from '@/lib/storage';
+import { useAuth } from '@/lib/AuthContext';
 
 const EMPTY_PRODUCT = {
   name: '', slug: '', sku: '', brand: '', category_id: '', short_description: '', technical_description: '',
@@ -33,6 +35,15 @@ const PRODUCT_WRITE_FIELDS = new Set([
   ...Object.keys(EMPTY_PRODUCT), 'available_colors', 'sds_url', 'tds_url',
 ]);
 
+class ProductReadBackError extends Error {
+  constructor(productId, cause) {
+    super(`Product ${productId} was written, but a fresh read failed. Reload the product list before retrying.`);
+    this.name = 'ProductReadBackError';
+    this.productWriteConfirmed = true;
+    this.cause = cause;
+  }
+}
+
 function productWritePayload(form, slug) {
   return Object.fromEntries(
     Object.entries({ ...form, slug }).filter(([key]) => PRODUCT_WRITE_FIELDS.has(key)),
@@ -41,12 +52,14 @@ function productWritePayload(form, slug) {
 
 export default function AdminProducts() {
   const { id } = useParams(); const navigate = useNavigate(); const location = useLocation();
+  const { profile } = useAuth();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_PRODUCT);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [imagesUploading, setImagesUploading] = useState(false);
+  const pendingUploads = useRef([]);
   const queryClient = useQueryClient();
 
   const { data: products = [], isLoading, isError: productsError } = useQuery({
@@ -61,20 +74,54 @@ export default function AdminProducts() {
 
   const saveMutation = useMutation({
     mutationFn: /** @param {Record<string, any>} data */ async (data) => {
-      if (editing) {
-        return Product.update(editing.id, data);
-      } else {
-        return Product.create(data);
+      const write = editing
+        ? await Product.update(editing.id, data)
+        : await Product.create(data);
+      try {
+        return await Product.get(write.id);
+      } catch (error) {
+        throw new ProductReadBackError(write.id, error);
       }
     },
     onSuccess: () => {
+      pendingUploads.current = [];
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-products'] });
+      queryClient.invalidateQueries({ queryKey: ['all-products-home'] });
       setDialogOpen(false);
       navigate('/admin/products');
       toast.success(editing ? 'Product updated' : 'Product created');
     },
-    onError: (error) => toast.error(error.message || 'Unable to save product. Please try again.'),
+    onError: async (error) => {
+      if (error instanceof ProductReadBackError) {
+        // The write returned an id, so keep those uploaded objects: the saved
+        // product may already reference them even though read-back failed.
+        pendingUploads.current = [];
+        queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+        queryClient.invalidateQueries({ queryKey: ['featured-products'] });
+        queryClient.invalidateQueries({ queryKey: ['all-products-home'] });
+        setDialogOpen(false);
+        navigate('/admin/products');
+        toast.error(error.message);
+        return;
+      }
+      const failedUploads = pendingUploads.current;
+      if (failedUploads.length) {
+        try {
+          await removeUploadedFiles(failedUploads.map(file => file.path));
+          const failedUrls = new Set(failedUploads.map(file => file.url));
+          setForm(current => ({ ...current, images: current.images.filter(url => !failedUrls.has(url)) }));
+          pendingUploads.current = [];
+        } catch (cleanupError) {
+          console.error('Product image cleanup failed after product write failure.', cleanupError);
+          toast.error('Product was not saved, and uploaded image cleanup failed. Retry saving or remove the new images before closing.');
+          return;
+        }
+      }
+      toast.error(error.message || 'Unable to save product. Please try again.');
+    },
   });
 
   const deleteMutation = useMutation({
@@ -101,7 +148,30 @@ export default function AdminProducts() {
     saveMutation.mutate(productWritePayload({ ...form, name }, slug));
   };
 
+  const handleDialogOpenChange = async (open) => {
+    if (!open && (imagesUploading || saveMutation.isPending)) return;
+    if (!open && pendingUploads.current.length) {
+      const uploads = pendingUploads.current;
+      try {
+        await removeUploadedFiles(uploads.map(file => file.path));
+        const urls = new Set(uploads.map(file => file.url));
+        setForm(current => ({ ...current, images: current.images.filter(url => !urls.has(url)) }));
+        pendingUploads.current = [];
+      } catch (error) {
+        console.error('Product image cleanup failed when closing the editor.', error);
+        toast.error('New images could not be removed from storage. Keep the editor open and retry, or save the product first.');
+        return;
+      }
+    }
+    setDialogOpen(open);
+    if (!open && location.pathname !== '/admin/products') navigate('/admin/products');
+  };
+
   const filtered = products.filter(p => !search || [p.name, p.sku, p.category_id].some(v => v?.toLowerCase().includes(search.toLowerCase())));
+
+  if (!profile || profile.is_disabled || !['admin', 'super_admin'].includes(profile.role)) {
+    return <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">Product management requires an administrator account. Contact an administrator to update your access.</p>;
+  }
 
   return (
     <div className="space-y-6">
@@ -205,7 +275,7 @@ export default function AdminProducts() {
       </div>
 
       {/* Product Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open && location.pathname !== '/admin/products') navigate('/admin/products'); }}>
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit Product' : 'Create Product'}</DialogTitle>
@@ -284,7 +354,12 @@ export default function AdminProducts() {
               <div><Label>Supplier Name</Label><Input value={form.supplier_name} onChange={e => updateField('supplier_name', e.target.value)} /></div>
               <div><Label>Cost Price (hidden)</Label><Input type="number" value={form.cost_price} onChange={e => updateField('cost_price', Number(e.target.value))} /></div>
             </div>
-            <ProductImageUploader images={form.images || []} onChange={v => updateField('images', v)} onUploadingChange={setImagesUploading} />
+            <ProductImageUploader
+              images={form.images || []}
+              onChange={v => updateField('images', v)}
+              onUploadingChange={setImagesUploading}
+              onPendingUploadsChange={files => { pendingUploads.current = [...pendingUploads.current, ...files]; }}
+            />
             <div><Label>Tags (comma sep.)</Label><Input value={form.tags?.join(', ')} onChange={e => updateField('tags', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">

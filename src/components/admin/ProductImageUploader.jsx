@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { uploadFile } from '@/lib/storage';
+import { removeUploadedFiles, uploadFile } from '@/lib/storage';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -7,27 +7,47 @@ import { toast } from 'sonner';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-/** @param {{ images?: string[], onChange: (images: string[]) => void, onUploadingChange?: (uploading: boolean) => void }} props */
-export default function ProductImageUploader({ images = [], onChange, onUploadingChange }) {
+/** @param {{ images?: string[], onChange: (images: string[]) => void, onUploadingChange?: (uploading: boolean) => void, onPendingUploadsChange?: (uploads: { path: string, url: string }[]) => void }} props */
+export default function ProductImageUploader({ images = [], onChange, onUploadingChange, onPendingUploadsChange }) {
   const inputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const uploadingRef = useRef(false);
   const [uploading, setUploading] = useState(false);
 
   const handleFiles = async (files) => {
-    if (!files?.length) return;
+    if (!files?.length || uploadingRef.current) return;
     const safeFiles = Array.from(files).filter(file => {
       const valid = ALLOWED_IMAGE_TYPES.includes(file.type) && file.size <= MAX_IMAGE_BYTES;
       if (!valid) toast.error(`${file.name}: upload a JPEG, PNG, or WebP image smaller than 5 MB.`);
       return valid;
     });
     if (!safeFiles.length) return;
+    uploadingRef.current = true;
     setUploading(true);
     onUploadingChange?.(true);
+    const uploaded = [];
     try {
-      const uploaded = [];
-      for (const file of safeFiles) { const { file_url } = await uploadFile({ file }); uploaded.push(file_url); }
-      onChange([...images, ...uploaded]); toast.success('Image upload complete');
-    } catch { toast.error('Unable to upload image. Please try again.'); }
-    finally { setUploading(false); onUploadingChange?.(false); }
+      for (const file of safeFiles) {
+        const { file_url, storage_path } = await uploadFile({ file });
+        uploaded.push({ path: storage_path, url: file_url });
+      }
+      onChange([...images, ...uploaded.map(file => file.url)]);
+      onPendingUploadsChange?.(uploaded);
+      toast.success('Image upload complete');
+    } catch (error) {
+      // If a multi-file batch fails partway through, remove objects uploaded by
+      // that batch so the remaining files are not orphaned in storage.
+      let cleanupFailed = false;
+      try {
+        await removeUploadedFiles(uploaded.map(file => file.path));
+      } catch (cleanupError) {
+        cleanupFailed = true;
+        console.error('Partial image upload cleanup failed.', cleanupError);
+      }
+      toast.error(cleanupFailed
+        ? 'Upload failed and temporary image cleanup also failed. Retry the upload or contact support.'
+        : error.message || 'Unable to upload image. Please try again.');
+    }
+    finally { uploadingRef.current = false; setUploading(false); onUploadingChange?.(false); }
   };
 
   const removeImage = (idx) => {
@@ -90,7 +110,7 @@ export default function ProductImageUploader({ images = [], onChange, onUploadin
         accept="image/jpeg,image/png,image/webp"
         multiple
         className="hidden"
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => { handleFiles(e.target.files); e.currentTarget.value = ''; }}
       />
     </div>
   );

@@ -15,5 +15,11 @@ export async function uploadFile({ file }) {
   if (error) throw error;
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return { file_url: data.publicUrl };
+  return { file_url: data.publicUrl, storage_path: path };
+}
+
+export async function removeUploadedFiles(paths) {
+  if (!paths?.length) return;
+  const { error } = await supabase.storage.from(BUCKET).remove(paths);
+  if (error) throw error;
 }
