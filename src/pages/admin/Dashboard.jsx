@@ -23,7 +23,7 @@ const total = async (table, filters = []) => {
 export default function AdminDashboard() {
   const { data, isLoading, error } = useQuery({ queryKey: ['admin-dashboard'], refetchInterval: 30000, queryFn: async () => {
     const [products, active, outOfStock, lowStock, orders, pending, completed, customers, services, quotes, paidOrders, lowProducts] = await Promise.all([
-      total('products', [['deleted_at', null]]), total('products', [['is_active', true], ['deleted_at', null]]), total('products', [['stock_status', 'out_of_stock'], ['deleted_at', null]]), total('products', [['stock_status', 'low_stock'], ['deleted_at', null]]),
+      total('product_catalog', [['deleted_at', null]]), total('product_catalog', [['is_active', true], ['deleted_at', null]]), total('product_catalog', [['stock_status', 'out_of_stock'], ['deleted_at', null]]), total('product_catalog', [['stock_status', 'low_stock'], ['deleted_at', null]]),
       total('orders'), total('orders', [['order_status', 'pending']]), total('orders', [['order_status', 'delivered']]), total('profiles', [['role', 'user']]), total('service_requests'), total('quotes'),
       supabase.from('orders').select('total').eq('payment_status', 'paid'), supabase.from('product_catalog').select('id,name,stock_quantity,low_stock_threshold').eq('stock_status', 'low_stock').limit(8)
     ]);

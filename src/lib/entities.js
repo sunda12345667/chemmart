@@ -36,9 +36,12 @@ function makeEntity(table) {
     },
     async create(record) {
       if (table === 'products') {
-        const { error } = await supabase.from(table).insert(record);
+        // Migration 0005 deliberately exposes only the product id on the base
+        // table. Returning the id confirms the insert without opening reads to
+        // confidential inventory columns.
+        const { data, error } = await supabase.from(table).insert(record).select('id').single();
         if (error) throw error;
-        return null;
+        return data;
       }
       const { data, error } = await supabase.from(table).insert(record).select().single();
       if (error) throw error;
@@ -46,9 +49,9 @@ function makeEntity(table) {
     },
     async update(id, record) {
       if (table === 'products') {
-        const { error } = await supabase.from(table).update(record).eq('id', id);
+        const { data, error } = await supabase.from(table).update(record).eq('id', id).select('id').single();
         if (error) throw error;
-        return null;
+        return data;
       }
       const { data, error } = await supabase.from(table).update(record).eq('id', id).select().single();
       if (error) throw error;

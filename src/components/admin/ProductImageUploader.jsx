@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-/** @param {{ images?: string[], onChange: (images: string[]) => void }} props */
-export default function ProductImageUploader({ images = [], onChange }) {
+/** @param {{ images?: string[], onChange: (images: string[]) => void, onUploadingChange?: (uploading: boolean) => void }} props */
+export default function ProductImageUploader({ images = [], onChange, onUploadingChange }) {
   const inputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
   const [uploading, setUploading] = useState(false);
 
@@ -21,12 +21,13 @@ export default function ProductImageUploader({ images = [], onChange }) {
     });
     if (!safeFiles.length) return;
     setUploading(true);
+    onUploadingChange?.(true);
     try {
       const uploaded = [];
       for (const file of safeFiles) { const { file_url } = await uploadFile({ file }); uploaded.push(file_url); }
       onChange([...images, ...uploaded]); toast.success('Image upload complete');
     } catch { toast.error('Unable to upload image. Please try again.'); }
-    finally { setUploading(false); }
+    finally { setUploading(false); onUploadingChange?.(false); }
   };
 
   const removeImage = (idx) => {

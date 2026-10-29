@@ -27,6 +27,18 @@ const EMPTY_PRODUCT = {
   allow_backorders: false, product_type: 'physical', specifications: []
 };
 
+// Keep writes aligned with the writable columns granted by migration 0005.
+// Catalog metadata such as id and timestamps must never be sent back on edit.
+const PRODUCT_WRITE_FIELDS = new Set([
+  ...Object.keys(EMPTY_PRODUCT), 'available_colors', 'sds_url', 'tds_url',
+]);
+
+function productWritePayload(form, slug) {
+  return Object.fromEntries(
+    Object.entries({ ...form, slug }).filter(([key]) => PRODUCT_WRITE_FIELDS.has(key)),
+  );
+}
+
 export default function AdminProducts() {
   const { id } = useParams(); const navigate = useNavigate(); const location = useLocation();
   const [search, setSearch] = useState('');
@@ -34,14 +46,14 @@ export default function AdminProducts() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_PRODUCT);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [imagesUploading, setImagesUploading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: products = [], isLoading } = useQuery({
+  const { data: products = [], isLoading, isError: productsError } = useQuery({
     queryKey: ['admin-products'],
     queryFn: () => Product.list('-created_date', 200),
-    initialData: [],
   });
-  const { data: categories = [] } = useQuery({ queryKey: ['admin-categories'], queryFn: () => Category.list('sort_order', 100), initialData: [] });
+  const { data: categories = [], isError: categoriesError } = useQuery({ queryKey: ['admin-categories'], queryFn: () => Category.list('sort_order', 100) });
   useEffect(() => {
     if (location.pathname.endsWith('/new')) { setEditing(null); setForm(EMPTY_PRODUCT); setDialogOpen(true); return; }
     if (id && products.length) { const product = products.find(p => p.id === id); if (product) { setEditing(product); setForm({ ...EMPTY_PRODUCT, ...product }); setDialogOpen(true); } }
@@ -50,13 +62,14 @@ export default function AdminProducts() {
   const saveMutation = useMutation({
     mutationFn: /** @param {Record<string, any>} data */ async (data) => {
       if (editing) {
-        await Product.update(editing.id, data);
+        return Product.update(editing.id, data);
       } else {
-        await Product.create(data);
+        return Product.create(data);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
       setDialogOpen(false);
       navigate('/admin/products');
       toast.success(editing ? 'Product updated' : 'Product created');
@@ -78,8 +91,14 @@ export default function AdminProducts() {
   const updateField = (k, v) => setForm(prev => ({ ...prev, [k]: v }));
 
   const handleSave = () => {
-    const slug = form.slug || form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    saveMutation.mutate({ ...form, slug });
+    const name = form.name.trim();
+    if (!name) { toast.error('Enter a product name.'); return; }
+    if (!form.category_id) { toast.error('Select a product category.'); return; }
+    if (form.price_mode === 'fixed' && (!Number.isFinite(Number(form.price)) || Number(form.price) < 0)) { toast.error('Enter a valid non-negative price.'); return; }
+    if (form.price_mode === 'range' && (!Number.isFinite(Number(form.price_min)) || !Number.isFinite(Number(form.price_max)) || Number(form.price_min) < 0 || Number(form.price_max) < Number(form.price_min))) { toast.error('Enter a valid price range.'); return; }
+    const slug = (form.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/^-|-$/g, '');
+    if (!slug) { toast.error('Enter a valid product slug.'); return; }
+    saveMutation.mutate(productWritePayload({ ...form, name }, slug));
   };
 
   const filtered = products.filter(p => !search || [p.name, p.sku, p.category_id].some(v => v?.toLowerCase().includes(search.toLowerCase())));
@@ -90,6 +109,8 @@ export default function AdminProducts() {
         <h1 className="font-heading text-xl sm:text-2xl font-bold">Products</h1>
         <Button asChild className="gap-1.5 text-sm"><Link to="/admin/products/new"><Plus className="h-4 w-4" /> <span className="hidden sm:inline">Add </span>Product</Link></Button>
       </div>
+
+      {(productsError || categoriesError) && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{productsError ? 'Unable to load products. Check your admin database access and migrations.' : 'Unable to load categories. Check your database access.'}</p>}
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -142,7 +163,7 @@ export default function AdminProducts() {
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : 'No products found'}</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : productsError ? 'Products could not be loaded.' : 'No products found'}</td></tr>
                 )}
               </tbody>
             </table>
@@ -179,7 +200,7 @@ export default function AdminProducts() {
           </Card>
         ))}
         {filtered.length === 0 && (
-          <div className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : 'No products found'}</div>
+          <div className="p-8 text-center text-muted-foreground">{isLoading ? 'Loading...' : productsError ? 'Products could not be loaded.' : 'No products found'}</div>
         )}
       </div>
 
@@ -263,7 +284,7 @@ export default function AdminProducts() {
               <div><Label>Supplier Name</Label><Input value={form.supplier_name} onChange={e => updateField('supplier_name', e.target.value)} /></div>
               <div><Label>Cost Price (hidden)</Label><Input type="number" value={form.cost_price} onChange={e => updateField('cost_price', Number(e.target.value))} /></div>
             </div>
-            <ProductImageUploader images={form.images || []} onChange={v => updateField('images', v)} />
+            <ProductImageUploader images={form.images || []} onChange={v => updateField('images', v)} onUploadingChange={setImagesUploading} />
             <div><Label>Tags (comma sep.)</Label><Input value={form.tags?.join(', ')} onChange={e => updateField('tags', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} /></div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
@@ -279,8 +300,8 @@ export default function AdminProducts() {
               <div><Label>SEO Title</Label><Input value={form.seo_title} onChange={e => updateField('seo_title', e.target.value)} /></div>
               <div><Label>SEO Description</Label><Input value={form.seo_description} onChange={e => updateField('seo_description', e.target.value)} /></div>
             </div>
-            <Button className="w-full" onClick={handleSave} disabled={saveMutation.isPending || !form.name || !form.category_id}>
-              {saveMutation.isPending ? 'Saving...' : editing ? 'Update Product' : 'Create Product'}
+            <Button className="w-full" onClick={handleSave} disabled={saveMutation.isPending || imagesUploading || !form.name || !form.category_id}>
+              {imagesUploading ? 'Uploading image...' : saveMutation.isPending ? 'Saving...' : editing ? 'Update Product' : 'Create Product'}
             </Button>
           </div>
         </DialogContent>
